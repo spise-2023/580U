@@ -3,135 +3,123 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-// Define the data type used in the Vector
-typedef int Data;
-
-// Define the Vector structure
-typedef struct Vector {
-    size_t size;
-    size_t capacity;
-    Data *array;
-} Vector;
-
-// Function to create and initialize a new Vector
 Vector *newVector(size_t capacity) {
-    Vector *newVector = (Vector *)malloc(sizeof(Vector));
-    if (newVector != NULL) {
-        newVector->size = 0;
-        newVector->capacity = capacity;
-        newVector->array = (Data *)calloc(capacity, sizeof(Data));
+    Vector *v = (Vector *)malloc(sizeof(Vector));
+    if (!v) return NULL;
+
+    v->array = (Data *)calloc(capacity, sizeof(Data));
+    if (!v->array) {
+        free(v);
+        return NULL;
     }
-    return newVector;
+
+    v->size = 0;
+    v->capacity = capacity;
+    return v;
 }
 
-// Function to deallocate an existing Vector
 void deleteVector(Vector *v) {
-    if (v != NULL) {
+    if (v) {
         free(v->array);
         free(v);
     }
 }
 
-// Function to print details of a Vector
 int printVector(const void *v) {
-    if (v == NULL) {
-        return printf("(null)");
-    } else {
-        printf("Vector(%p){.size=%lu, .capacity=%lu, .array={", v, ((Vector *)v)->size, ((Vector *)v)->capacity);
-        for (size_t i = 0; i < ((Vector *)v)->capacity; ++i) {
-            printf("%d", ((Vector *)v)->array[i]);
-            if (i < ((Vector *)v)->capacity - 1) {
-                printf(",");
-            }
+    const Vector *vec = (const Vector *)v;
+    int chars_written = 0;
+    
+    chars_written += printf("Vector(%p){.size=%lu, .capacity=%lu, .array={", (void *)vec, vec->size, vec->capacity);
+    for (size_t i = 0; i < vec->size; i++) {
+        if (i > 0) {
+            chars_written += printf(", ");
         }
-        printf("}}");
+        chars_written += printf("%lu", vec->array[i]);
     }
-    return 0;
+    chars_written += printf("}}\n");
+    
+    return chars_written;
 }
 
-// Function to get a pointer to the Data element at an index
 Data *at(Vector *v, size_t index) {
-    return (v != NULL && index < v->size) ? &(v->array[index]) : NULL;
+    if (index >= v->size) return NULL;
+    return &(v->array[index]);
 }
 
-// Function to clear the Vector in place
 void clear(Vector *v) {
-    if (v != NULL) {
-        for (size_t i = 0; i < v->capacity; ++i) {
+    memset(v->array, 0, v->capacity * sizeof(Data));
+    v->size = 0;
+}
+
+Data *find(Vector *v, Data d) {
+    for (size_t i = 0; i < v->size; i++) {
+        if (v->array[i] == d) return &(v->array[i]);
+    }
+    return NULL;
+}
+
+Data *insert(Vector *v, Data d, size_t idx) {
+    if (idx >= v->capacity) {
+        // Expand the capacity
+        size_t new_capacity = v->capacity * 2;
+        if (idx >= new_capacity) {
+            new_capacity = idx + 1;
+        }
+        Data *new_array = (Data *)realloc(v->array, new_capacity * sizeof(Data));
+        if (!new_array) return NULL;
+        
+        // Initialize new elements to zero
+        for (size_t i = v->capacity; i < new_capacity; i++) {
+            new_array[i] = 0;
+        }
+        
+        v->array = new_array;
+        v->capacity = new_capacity;
+    }
+
+    // Handle the insertion
+    if (idx >= v->size) {
+        // Extend and fill with zeros if necessary
+        for (size_t i = v->size; i < idx; i++) {
             v->array[i] = 0;
         }
-        v->size = 0;
+        v->size = idx + 1;
     }
+
+    v->array[idx] = d;
+    return &(v->array[idx]);
 }
 
-// Function to search for the first matching Data item
-Data *find(Vector *v, Data d) {
-    if (v != NULL) {
-        for (size_t i = 0; i < v->size; ++i) {
-            if (v->array[i] == d) {
-                return &(v->array[i]);
-            }
-        }
-    }
-    return NULL;
-}
 
-// Function to insert a data item into the Vector
-Data *insert(Vector *v, Data d, size_t idx) {
-    if (v != NULL && idx <= v->size) {
-        if (v->size == v->capacity) {
-            // If the size is equal to the capacity, resize the vector
-            v = resize(v, v->capacity * 2);
-            if (v == NULL) {
-                return NULL; // Resize failed
-            }
-        }
-
-        // Shift elements to the right to make space for the new element
-        for (size_t i = v->size; i > idx; --i) {
-            v->array[i] = v->array[i - 1];
-        }
-
-        // Insert the new element at the specified index
-        v->array[idx] = d;
-        ++(v->size);
-
-        return &(v->array[idx]);
-    }
-    return NULL;
-}
-
-// Function to dynamically resize the Vector's array storage
 Vector *resize(Vector *v, size_t count) {
-    if (v != NULL) {
-        Data *newArray = (Data *)realloc(v->array, count * sizeof(Data));
-        if (newArray != NULL) {
-            v->array = newArray;
-            v->capacity = count;
-            return v;
-        } else {
-            return NULL; // realloc failed
-        }
+    Data *new_array = (Data *)realloc(v->array, count * sizeof(Data));
+    if (!new_array) return NULL;
+
+    if (count > v->capacity) {
+        // Initialize new elements to zero
+        memset(new_array + v->capacity, 0, (count - v->capacity) * sizeof(Data));
     }
-    return NULL;
+
+    v->array = new_array;
+    v->capacity = count;
+    if (v->size > count) v->size = count; // Adjust size if reduced
+    return v;
 }
 
-// Function to remove an item from the Vector
-Data *remove(Vector *v, size_t index) {
-    if (v != NULL && index < v->size) {
-        Data *removedItem = &(v->array[index]);
+Data *removes(Vector *v, size_t index) {
+    if (index >= v->size) return NULL;
 
-        // Shift elements to the left to fill the gap
-        for (size_t i = index; i < v->size - 1; ++i) {
-            v->array[i] = v->array[i + 1];
-        }
+    Data *removed_item = &(v->array[index]);
 
-        // Set the last element to 0
-        v->array[v->size - 1] = 0;
-        --(v->size);
-
-        return removedItem;
+    // Shift elements
+    for (size_t i = index; i < v->size - 1; i++) {
+        v->array[i] = v->array[i + 1];
     }
-    return NULL;
+
+    v->array[v->size - 1] = 0; // Zero out the last element
+    v->size--;
+
+    return removed_item;
 }

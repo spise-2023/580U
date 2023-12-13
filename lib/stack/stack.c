@@ -3,26 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Define the data type used in the Node
-typedef int Data;
-
-// Define the Node structure
-typedef struct Node {
-    Data data;
-    struct Node *next;
-} Node;
-
-// Define the Stack structure
-typedef struct Stack {
-    Node *top;
-    size_t size;
-} Stack;
 
 // Function to create and initialize a new Node
 Node *newNode(Data d) {
     Node *newNode = (Node *)malloc(sizeof(Node));
     if (newNode != NULL) {
-        newNode->data = d;
+        newNode->value = d;
         newNode->next = NULL;
     }
     return newNode;
@@ -38,7 +24,7 @@ int printNode(Node *n) {
     if (n == NULL) {
         return printf("(null)");
     } else {
-        return printf("Node(%p){.data=%d, .next=%p}", n, n->data, n->next);
+        return printf("Node(%p){.data=%ld, .next=%p}", n, n->value, n->next);
     }
 }
 

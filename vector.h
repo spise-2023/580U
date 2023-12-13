@@ -26,6 +26,6 @@ void clear(Vector *v);
 Data *find(Vector *v, Data d);
 Data *insert(Vector *v, Data d, size_t idx);
 Vector *resize(Vector *v, size_t count);
-Data *remove(Vector *v, size_t index);
+Data *removes(Vector *v, size_t index);
 
 #endif // VECTOR_H

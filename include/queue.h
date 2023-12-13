@@ -32,9 +32,8 @@ Node *back(Queue *q);
 void clear(Queue *q);
 Node *dequeue(Queue *q);
 Node *enqueue(Queue *q, Data d);
-Node front(Queue *q);
-Data peek(Queue *q);
+Node *front(Queue *q);
 size_t size(Queue *q);
 void traverse(Queue *q, int (*func)(const void *));
 
-#endif // DATASTRUCTS_QUEUE_H
+#endif // QUEUE_H

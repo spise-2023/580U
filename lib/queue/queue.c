@@ -1,27 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "queue.h"
-// Define the data type used in the Node
-typedef int Data;
-
-// Define the Node structure
-typedef struct Node {
-    Data data;
-    struct Node *next;
-} Node;
-
-// Define the Queue structure
-typedef struct Queue {
-    Node *head;
-    Node *tail;
-    size_t size;
-} Queue;
 
 // Function to create and initialize a new Node
 Node *newNode(Data d) {
     Node *newNode = (Node *)malloc(sizeof(Node));
     if (newNode != NULL) {
-        newNode->data = d;
+        newNode->value = d;
         newNode->next = NULL;
     }
     return newNode;
@@ -37,19 +22,20 @@ int printNode(const void *n) {
     if (n == NULL) {
         return printf("(null)");
     } else {
-        return printf("Node(%p){.data=%d, .next=%p}", n, ((Node *)n)->data, ((Node *)n)->next);
+        const Node *node = (const Node *)n;
+        return printf("Node(%p){.value=%lu, .next=%p}", node, node->value, node->next);
     }
 }
 
 // Function to create and initialize a new Queue
 Queue *newQueue() {
-    Queue *newQueue = (Queue *)malloc(sizeof(Queue));
-    if (newQueue != NULL) {
-        newQueue->head = NULL;
-        newQueue->tail = NULL;
-        newQueue->size = 0;
+    Queue *queue = (Queue *)malloc(sizeof(Queue));
+    if (queue != NULL) {
+        queue->head = NULL;
+        queue->tail = NULL;
+        queue->size = 0;
     }
-    return newQueue;
+    return queue;
 }
 
 // Function to deallocate an existing Queue
@@ -60,28 +46,35 @@ void deleteQueue(Queue *q) {
     }
 }
 
+
 // Function to print details of a Queue
 int printQueue(const void *q) {
     if (q == NULL) {
         return printf("(null)");
     } else {
-        printf("Queue(%p){.head=%p, .tail=%p .size=%llu}", q, ((Queue *)q)->head, ((Queue *)q)->tail, ((Queue *)q)->size);
+        const Queue *queue = (const Queue *)q;
+        printf("Queue(%p){.head=%p, .tail=%p, .size=%zu}", queue, queue->head, queue->tail, queue->size);
 
         // Print each node in the queue
-        Node *current = ((Queue *)q)->head;
+        const Node *current = queue->head;
         while (current != NULL) {
             printf(" -> ");
             printNode(current);
             current = current->next;
         }
+        return 0;
     }
-    return 0;
 }
+
 
 // Function to get a pointer to the Node at the tail of the Queue without removing it
 Node *back(Queue *q) {
-    return (q != NULL && q->tail != NULL) ? q->tail : NULL;
+    if (q != NULL && q->tail != NULL) {
+        return q->tail;  // Return the tail node of the queue
+    }
+    return NULL;
 }
+
 
 // Function to clear the contents of a Queue
 void clear(Queue *q) {
@@ -136,7 +129,10 @@ Node *enqueue(Queue *q, Data d) {
 
 // Function to get a pointer to the Node at the head of the Queue without dequeuing it
 Node *front(Queue *q) {
-    return (q != NULL && q->head != NULL) ? q->head : NULL;
+    if (q != NULL && q->head != NULL) {
+        return q->head;  // Return the head node of the queue
+    }
+    return NULL;
 }
 
 // Function to get the size of the Queue
